@@ -3,7 +3,7 @@ uvicorn[standard]==0.37.0
 sqlmodel==0.0.27
 cloudinary==1.44.1
 requests==2.31.0
-psycopg2==2.9.9
+psycopg2-binary==2.9.9
 python-multipart==0.0.20
 pydantic==2.12.3
 pydantic-settings==2.11.0

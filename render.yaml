@@ -1,5 +1,4 @@
 services:
-  # Web Service
   - type: web
     name: project-x-api
     runtime: python
@@ -8,6 +7,8 @@ services:
     buildCommand: "pip install -r requirements.txt"
     startCommand: "cd code/backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT"
     envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.0"
       - key: DATABASE_URL
         fromDatabase:
           name: project-x-db
@@ -19,7 +20,6 @@ services:
       - key: CLOUDINARY_API_SECRET
         sync: false
 
-# PostgreSQL Database (FREE tier)
 databases:
   - name: project-x-db
     databaseName: projectx
