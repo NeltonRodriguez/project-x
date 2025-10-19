@@ -97,22 +97,35 @@ def upload_images_to_cloudinary(
 ) -> list[str]:
     """
     Upload images from URLs or base64.
-    (Keep this for URL-based uploads)
+    Validates image format before uploading.
     """
     uploaded_urls = []
     
     for i, image_data in enumerate(image_data_list):
         try:
+            # Skip empty strings
             if not image_data or image_data.strip() == "":
-                print(f"⚠️ Skipping empty image at index {i}")
-                continue
+                raise ValueError(f"Imagen en posición {i} está vacía")
             
+            # Check for placeholder/invalid strings
+            if image_data.lower() in ['string', 'url', 'image', 'photo']:
+                raise ValueError(
+                    f"Imagen en posición {i} es inválida: '{image_data}'. "
+                    f"Debe ser una URL válida (http/https) o base64"
+                )
+            
+            # Check if already on Cloudinary
             if "cloudinary.com" in image_data:
                 print(f"✅ Image {i} is already on Cloudinary")
                 uploaded_urls.append(image_data)
                 continue
             
+            # Validate URL format
             if image_data.startswith('http://') or image_data.startswith('https://'):
+                # Additional URL validation
+                if len(image_data) < 10:
+                    raise ValueError(f"URL en posición {i} es demasiado corta: '{image_data}'")
+                
                 print(f"📤 Uploading image {i} from URL...")
                 result = cloudinary.uploader.upload(
                     image_data,
@@ -123,6 +136,7 @@ def upload_images_to_cloudinary(
                 uploaded_urls.append(result["secure_url"])
                 print(f"✅ Image {i} uploaded successfully")
                 
+            # Validate base64 format
             elif image_data.startswith('data:image'):
                 print(f"📤 Uploading image {i} from base64...")
                 result = cloudinary.uploader.upload(
@@ -135,14 +149,20 @@ def upload_images_to_cloudinary(
                 print(f"✅ Image {i} uploaded successfully")
                 
             else:
+                # Invalid format
                 raise ValueError(
-                    f"Invalid image data at index {i}. "
-                    f"Expected URL or base64, got: '{image_data[:50]}'"
+                    f"Imagen en posición {i} tiene formato inválido. "
+                    f"Debe comenzar con 'http://', 'https://' o 'data:image'. "
+                    f"Recibido: '{image_data[:50]}...'"
                 )
                 
+        except ValueError as ve:
+            # Re-raise validation errors (will become 400 Bad Request)
+            raise ve
         except Exception as e:
+            # Convert other errors to validation errors
             print(f"❌ Error uploading image {i}: {str(e)}")
-            raise Exception(f"Failed to upload image {i}: {str(e)}")
+            raise ValueError(f"Error al procesar imagen {i}: {str(e)}")
     
     return uploaded_urls
 

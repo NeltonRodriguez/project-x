@@ -73,9 +73,6 @@ def create_post_from_urls(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-
-# ADD THESE TWO ENDPOINTS:
-
 @router.put("/{post_id}", response_model=PostRead)
 def update_existing_post(
     post_id: int,
@@ -89,10 +86,12 @@ def update_existing_post(
             raise HTTPException(status_code=404, detail="Post not found")
         return post
     except ValueError as e:
+        # Validation errors → 400 Bad Request
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
-
+        # Unexpected errors → 500 Internal Server Error
+        print(f"❌ Unexpected error in update_post: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error interno del servidor")
 
 @router.delete("/{post_id}", status_code=204)
 def delete_existing_post(
