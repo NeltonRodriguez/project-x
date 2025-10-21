@@ -124,7 +124,7 @@ def upload_images_to_cloudinary(
             if image_data.startswith('http://') or image_data.startswith('https://'):
                 # Additional URL validation
                 if len(image_data) < 10:
-                    raise ValueError(f"URL en posición {i} es demasiado corta: '{image_data}'")
+                    raise ValueError(f"URL {i} is too short: '{image_data}'")
                 
                 print(f"📤 Uploading image {i} from URL...")
                 result = cloudinary.uploader.upload(
@@ -151,9 +151,9 @@ def upload_images_to_cloudinary(
             else:
                 # Invalid format
                 raise ValueError(
-                    f"Imagen en posición {i} tiene formato inválido. "
-                    f"Debe comenzar con 'http://', 'https://' o 'data:image'. "
-                    f"Recibido: '{image_data[:50]}...'"
+                    f"Image in position {i} has an invalid format. "
+                    f"Should start with 'http://', 'https://' o 'data:image'. "
+                    f"Received: '{image_data[:50]}...'"
                 )
                 
         except ValueError as ve:
@@ -162,7 +162,7 @@ def upload_images_to_cloudinary(
         except Exception as e:
             # Convert other errors to validation errors
             print(f"❌ Error uploading image {i}: {str(e)}")
-            raise ValueError(f"Error al procesar imagen {i}: {str(e)}")
+            raise ValueError(f"Error processing the images {i}: {str(e)}")
     
     return uploaded_urls
 
@@ -179,7 +179,7 @@ async def create_post_with_files(
     """
     # Validate number of images
     if len(image_files) > 10:
-        raise ValueError("Máximo 10 imágenes permitidas")
+        raise ValueError("Max 10 images")
     
     # Upload files to Cloudinary
     print(f"📤 Processing {len(image_files)} file uploads...")
@@ -209,7 +209,7 @@ def create_post(session: Session, post_data: Post) -> Post:
     Create a post with URLs (legacy support).
     """
     if len(post_data.images) > 10:
-        raise ValueError("Máximo 10 imágenes permitidas")
+        raise ValueError("Max 10 images")
     
     if post_data.images and len(post_data.images) > 0:
         print(f"📤 Processing {len(post_data.images)} images...")
@@ -239,7 +239,7 @@ def update_post(session: Session, post_id: int, data: dict) -> Post | None:
         return None
     
     if "images" in data and len(data["images"]) > 10:
-        raise ValueError("Máximo 10 imágenes permitidas")
+        raise ValueError("Max 10 images")
     
     if "images" in data and data["images"]:
         print(f"📤 Processing {len(data['images'])} images for update...")
@@ -269,3 +269,10 @@ def delete_post(session: Session, post_id: int):
     session.commit()
     
     return True
+
+def search_posts_by_name(session: Session, name: str) -> List[Post]:
+    posts = session.exec(
+        select(Post).where(Post.name.ilike(f"%{name}%"))
+    ).all()
+    
+    return posts

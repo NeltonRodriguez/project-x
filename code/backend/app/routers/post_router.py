@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Query
 from sqlmodel import Session
 from app.database import get_session
 from app.services import post_service
@@ -13,6 +13,21 @@ router = APIRouter(prefix="/posts", tags=["posts"])
 def get_all_posts(session: Session = Depends(get_session)):
     return post_service.get_posts(session)
 
+
+@router.get("/search/", response_model=List[PostRead])
+def search_posts(
+    name: str = Query(..., min_length=2, description="Search term (min 2 characters)"),
+    session: Session = Depends(get_session)
+):
+    posts = post_service.search_posts_by_name(session, name.strip())
+    
+    if not posts:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Not found by name '{name}'"
+        )
+    
+    return posts
 
 @router.get("/{post_id}", response_model=PostRead)
 def get_single_post(post_id: int, session: Session = Depends(get_session)):
@@ -40,7 +55,7 @@ async def create_post_with_files(
             if file.content_type not in allowed_types:
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Archivo '{file.filename}' no es una imagen válida"
+                    detail=f"File '{file.filename}' is invalid"
                 )
         
         new_post = await post_service.create_post_with_files(
@@ -58,7 +73,7 @@ async def create_post_with_files(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error interno: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 
 @router.post("/from-urls", response_model=PostRead, status_code=201)
@@ -73,6 +88,7 @@ def create_post_from_urls(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+
 @router.put("/{post_id}", response_model=PostRead)
 def update_existing_post(
     post_id: int,
@@ -86,16 +102,15 @@ def update_existing_post(
             raise HTTPException(status_code=404, detail="Post not found")
         return post
     except ValueError as e:
-        # Validation errors → 400 Bad Request
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        # Unexpected errors → 500 Internal Server Error
         print(f"❌ Unexpected error in update_post: {str(e)}")
-        raise HTTPException(status_code=500, detail="Error interno del servidor")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
 
 @router.delete("/{post_id}", status_code=204)
 def delete_existing_post(
-    post_id: int, 
+    post_id: int,
     session: Session = Depends(get_session)
 ):
     """Delete a post"""
