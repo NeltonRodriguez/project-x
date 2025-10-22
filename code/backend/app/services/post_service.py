@@ -3,7 +3,7 @@ from app.models.post_model import Post
 from datetime import datetime
 import cloudinary.uploader
 from fastapi import UploadFile
-from typing import List
+from typing import List, Optional
 
 
 async def upload_files_to_cloudinary(
@@ -172,7 +172,8 @@ async def create_post_with_files(
     name: str,
     content: str,
     price: float,
-    image_files: List[UploadFile]
+    image_files: List[UploadFile],
+    category_id: Optional[int] = None 
 ) -> Post:
     """
     Create a post with file uploads.
@@ -193,7 +194,8 @@ async def create_post_with_files(
         name=name,
         content=content,
         price=price,
-        images=image_urls
+        images=image_urls,
+        category_id=category_id
     )
     
     # Save to database

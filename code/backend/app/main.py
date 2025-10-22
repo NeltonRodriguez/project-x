@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from app.database import create_db_and_tables
+from app.routers import post_router, category_router  # Add category_router
 from app.routers import post_router
 import cloudinary
 import json
@@ -80,6 +81,7 @@ app = FastAPI(
 
 # Register routers
 app.include_router(post_router.router)
+app.include_router(category_router.router)  # Add this
 
 
 @app.get("/")
