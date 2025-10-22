@@ -34,24 +34,26 @@ def create_category(session: Session, category_data: Category) -> Category:
 
 
 def update_category(session: Session, category_id: int, data: dict) -> Category | None:
-    """Update a category"""
     category = session.get(Category, category_id)
     if not category:
         return None
     
     # Check if new name conflicts with existing category
-    if "name" in data:
+    if "name" in data and data["name"]:
         existing = get_category_by_name(session, data["name"])
         if existing and existing.category_id != category_id:
-            raise ValueError(f"Category '{data['name']}' already exists")
+            raise ValueError(f"Ya existe una categoría con el nombre '{data['name']}'")
     
+    # Update category fields
     for key, value in data.items():
-        setattr(category, key, value)
+        if value is not None:  # Only update non-None values
+            setattr(category, key, value)
     
     session.add(category)
     session.commit()
     session.refresh(category)
     return category
+
 
 
 def delete_category(session: Session, category_id: int) -> bool:

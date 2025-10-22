@@ -45,12 +45,28 @@ def update_existing_category(
 ):
     """Update a category"""
     try:
-        category = category_service.update_category(session, category_id, category_data.model_dump())
+        category = category_service.update_category(
+            session, 
+            category_id, 
+            category_data.model_dump()
+        )
+        
+        # Check if category was found BEFORE trying to return it
         if not category:
             raise HTTPException(status_code=404, detail="Category not found")
+        
         return category
+        
+    except HTTPException:
+        # Re-raise HTTP exceptions (like the 404 above)
+        raise
     except ValueError as e:
+        # Validation errors (duplicate name) → 400
         raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        # Unexpected errors → 500
+        print(f"❌ Unexpected error in update_category: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal Server Error")
 
 
 @router.delete("/{category_id}", status_code=204)

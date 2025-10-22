@@ -101,13 +101,15 @@ def update_existing_post(
     try:
         post = post_service.update_post(session, post_id, post_data.model_dump())
         if not post:
-            raise HTTPException(status_code=404, detail="Post not found")
+            raise HTTPException(status_code=404, detail="Post no encontrado")
         return post
     except ValueError as e:
+        # Category doesn't exist, validation errors → 400
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
+        # Unexpected errors → 500
         print(f"❌ Unexpected error in update_post: {str(e)}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail="Error interno del servidor")
 
 @router.get("/category/{category_id}", response_model=List[PostRead])
 def get_posts_by_category(

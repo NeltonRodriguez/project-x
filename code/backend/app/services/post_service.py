@@ -240,9 +240,18 @@ def update_post(session: Session, post_id: int, data: dict) -> Post | None:
     if not post:
         return None
     
+    # Validate number of images
     if "images" in data and len(data["images"]) > 10:
-        raise ValueError("Max 10 images")
+        raise ValueError("Máximo 10 imágenes permitidas")
     
+    # Validate category exists if being updated
+    if "category_id" in data and data["category_id"] is not None:
+        from app.models.category_model import Category
+        category = session.get(Category, data["category_id"])
+        if not category:
+            raise ValueError(f"Categoría con ID {data['category_id']} no existe")
+    
+    # Upload new images if provided
     if "images" in data and data["images"]:
         print(f"📤 Processing {len(data['images'])} images for update...")
         data["images"] = upload_images_to_cloudinary(
@@ -250,6 +259,7 @@ def update_post(session: Session, post_id: int, data: dict) -> Post | None:
             public_prefix=f"post_{post_id}"
         )
     
+    # Update post fields
     for key, value in data.items():
         setattr(post, key, value)
     
